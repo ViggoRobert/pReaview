@@ -120,17 +120,17 @@ jobs:
           curl -LO "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_${{ runner.os }}.zip"
           7z x pluginval_${{ runner.os }}.zip
           ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
-
-      - name: Import Certificates (macOS)
-        uses: sudara/basic-macos-keychain-action@v1
-        id: keychain
-        if: ${{ runner.os == 'macOS'}}
-        with:
-          dev-id-app-cert: ${{ secrets.DEV_ID_APP_CERT }}
-          dev-id-app-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
-          dev-id-installer-cert: ${{ secrets.DEV_ID_INSTALLER_CERT }}
-          dev-id-installer-password: ${{ secrets.DEV_ID_INSTALLER_PASSWORD }}
-      # Disabled Mac code signing step
+      # Disabled Mac code signing steps and developer certificat import
+      #- name: Import Certificates (macOS)
+      #  uses: sudara/basic-macos-keychain-action@v1
+      #  id: keychain
+      #  if: ${{ runner.os == 'macOS'}}
+      #  with:
+      #    dev-id-app-cert: ${{ secrets.DEV_ID_APP_CERT }}
+      #    dev-id-app-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
+      #    dev-id-installer-cert: ${{ secrets.DEV_ID_INSTALLER_CERT }}
+      #    dev-id-installer-password: ${{ secrets.DEV_ID_INSTALLER_PASSWORD }}
+      
       #- name: Codesign (macOS)
       #  if: ${{ runner.os == 'macOS' }}
       #  timeout-minutes: 5
@@ -152,26 +152,26 @@ jobs:
 
           # Stuff the resource into the strange Icon? file's resource fork
           Rez -a /tmp/icons -o "${{ env.VST3_PATH }}/Icon"$'\r'
-          Rez -a /tmp/icons -o "${{ env.AU_PATH }}/Icon"$'\r'
+          # Rez -a /tmp/icons -o "${{ env.AU_PATH }}/Icon"$'\r'
           Rez -a /tmp/icons -o "${{ env.CLAP_PATH }}/Icon"$'\r'
 
           # Set custom icon attribute
           SetFile -a C "${{ env.VST3_PATH }}"
-          SetFile -a C "${{ env.AU_PATH }}"
+          # SetFile -a C "${{ env.AU_PATH }}"
           SetFile -a C "${{ env.CLAP_PATH }}"
 
       - name: pkgbuild, Productbuild and Notarize
         if: ${{ runner.os == 'macOS' }}
         timeout-minutes: 5
         run: |
-          pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "packaging/${{ env.PRODUCT_NAME }}.au.pkg"
+          #pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "packaging/${{ env.PRODUCT_NAME }}.au.pkg"
           pkgbuild --identifier "${{ env.BUNDLE_ID }}.vst3.pkg" --version $VERSION --component "${{ env.VST3_PATH }}" --install-location "/Library/Audio/Plug-Ins/VST3" "packaging/${{ env.PRODUCT_NAME }}.vst3.pkg"
           pkgbuild --identifier "${{ env.BUNDLE_ID }}.clap.pkg" --version $VERSION --component "${{ env.CLAP_PATH }}" --install-location "/Library/Audio/Plug-Ins/CLAP" "packaging/${{ env.PRODUCT_NAME }}.clap.pkg"
 
           # Standalone is special, needs a boolean to always install in /Applications
-          pkgbuild --analyze --root "$(dirname "${{ env.STANDALONE_PATH }}")" standalone.plist
-          plutil -replace BundleIsRelocatable -bool NO standalone.plist
-          pkgbuild --identifier "${{ env.BUNDLE_ID }}.app.pkg" --version $VERSION --root "$(dirname "${{ env.STANDALONE_PATH }}")" --component-plist standalone.plist --install-location "/Applications" "packaging/${{ env.PRODUCT_NAME }}.app.pkg"
+          #pkgbuild --analyze --root "$(dirname "${{ env.STANDALONE_PATH }}")" standalone.plist
+          #plutil -replace BundleIsRelocatable -bool NO standalone.plist
+          #pkgbuild --identifier "${{ env.BUNDLE_ID }}.app.pkg" --version $VERSION --root "$(dirname "${{ env.STANDALONE_PATH }}")" --component-plist standalone.plist --install-location "/Applications" "packaging/${{ env.PRODUCT_NAME }}.app.pkg"
 
           cd packaging
           envsubst < distribution.xml.template > distribution.xml
