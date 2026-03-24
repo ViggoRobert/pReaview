@@ -1,11 +1,13 @@
 #include "PluginEditor.h"
 
-PluginEditor::PluginEditor (PluginProcessor& p)
+PluginEditor::PluginEditor (PluginProcessor& p, void (*globalBypass) (int), void (*consoleMsg) (const char*), int (*GetNumRegionsOrMarkersFn) (int))
     : AudioProcessorEditor (&p), processorRef (p)
 {
     juce::ignoreUnused (processorRef);
-
+    
     addAndMakeVisible (inspectButton);
+    addAndMakeVisible (showconmsgButton);
+    addAndMakeVisible (bypassallfxButton);
 
     // this chunk of code instantiates and opens the melatonin inspector
     inspectButton.onClick = [&] {
@@ -17,6 +19,9 @@ PluginEditor::PluginEditor (PluginProcessor& p)
 
         inspector->setVisible (true);
     };
+
+    showconmsgButton.onClick = [consoleMsg, GetNumRegionsOrMarkersFn] { juce::NullCheckedInvocation::invoke (consoleMsg, std::to_string (GetNumRegionsOrMarkersFn(0)).c_str()); };
+    bypassallfxButton.onClick = [globalBypass] { juce::NullCheckedInvocation::invoke (globalBypass, -1); };
 
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -44,5 +49,7 @@ void PluginEditor::resized()
     // layout the positions of your child components here
     auto area = getLocalBounds();
     area.removeFromBottom(50);
-    inspectButton.setBounds (getLocalBounds().withSizeKeepingCentre(100, 50));
+    inspectButton.setBounds (area.removeFromTop (50).reduced (3));
+    showconmsgButton.setBounds (area.removeFromTop (50).reduced (3));
+    bypassallfxButton.setBounds (area.removeFromTop (50).reduced (3));
 }

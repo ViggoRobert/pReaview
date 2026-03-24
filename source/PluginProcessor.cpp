@@ -1,6 +1,12 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+namespace reaper
+{
+    DEF_CLASS_IID (IReaperHostApplication)
+    DEF_CLASS_IID (IReaperUIEmbedInterface)
+}
+
 //==============================================================================
 PluginProcessor::PluginProcessor()
      : AudioProcessor (BusesProperties()
@@ -159,7 +165,7 @@ bool PluginProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* PluginProcessor::createEditor()
 {
-    return new PluginEditor (*this);
+    return new PluginEditor (*this, globalBypassFn, consoleMsgFn, GetNumRegionsOrMarkersFn);
 }
 
 //==============================================================================

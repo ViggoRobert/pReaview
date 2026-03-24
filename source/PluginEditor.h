@@ -8,7 +8,11 @@
 class PluginEditor : public juce::AudioProcessorEditor
 {
 public:
-    explicit PluginEditor (PluginProcessor&);
+    explicit PluginEditor (PluginProcessor&,
+        void (*globalBypass) (int),
+        void (*consoleMsg) (const char*),
+        int (*GetNumRegionsOrMarkersFn) (int)
+    );
     ~PluginEditor() override;
 
     //==============================================================================
@@ -21,5 +25,7 @@ private:
     PluginProcessor& processorRef;
     std::unique_ptr<melatonin::Inspector> inspector;
     juce::TextButton inspectButton { "Inspect the UI" };
+    juce::TextButton showconmsgButton { "showconmsg" };
+    juce::TextButton bypassallfxButton { "bypassallfx" };
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };
