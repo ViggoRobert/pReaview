@@ -165,7 +165,7 @@ bool PluginProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* PluginProcessor::createEditor()
 {
-    return new PluginEditor (*this, globalBypassFn, consoleMsgFn, GetNumRegionsOrMarkersFn);
+    return new PluginEditor (*this, globalBypassFn, consoleMsgFn, getNumRegionsFn, enumProjectMarkersFn);
 }
 
 //==============================================================================

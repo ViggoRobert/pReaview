@@ -14,6 +14,11 @@
 
 //JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
+using GlobalBypassFunc = void (*)(int);
+using ConsoleMsgFunc = void (*)(const char*);
+using GetNumRegionsFunc = int (*)(int);
+using EnumProjectMarkersFunc = int (*)(int, bool*, double*, double*, const char**, int*);
+
 namespace reaper
 {
     //JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wzero-as-null-pointer-constant",
@@ -36,9 +41,10 @@ struct ReaperAPIListener
 {
     virtual ~ReaperAPIListener() = default;
     
-    virtual void setGlobalBypassFunction (void (*) (int)) = 0;
-    virtual void setConsoleMsgFunction (void (*) (const char*)) = 0;
-    virtual void GetNumRegionsOrMarkersFunction (int (*) (int)) = 0;
+    virtual void setGlobalBypassFunction(GlobalBypassFunc fn) = 0;
+    virtual void setConsoleMsgFunction(ConsoleMsgFunc fn) = 0;
+    virtual void setGetNumRegionsOrMarkersFunction(GetNumRegionsFunc fn) = 0;
+    virtual void setEnumProjectMarkersFunction(EnumProjectMarkersFunc fn) = 0;
 };
 
 class ReaperAPI final : public reaper::IReaperUIEmbedInterface
@@ -84,17 +90,22 @@ public:
         {
             if (void* fnPtr = static_cast<reaper::IReaperHostApplication*> (objPtr)->getReaperApi ("BypassFxAllTracks"))
             {
-                listener.setGlobalBypassFunction (reinterpret_cast<void (*) (int)> (fnPtr));
+                listener.setGlobalBypassFunction (reinterpret_cast<GlobalBypassFunc> (fnPtr));
             }       
             
             if (void* fnPtr = static_cast<reaper::IReaperHostApplication*> (objPtr)->getReaperApi ("GetNumRegionsOrMarkers"))
             {
-                listener.GetNumRegionsOrMarkersFunction (reinterpret_cast<int (*) (int)> (fnPtr));
+                listener.setGetNumRegionsOrMarkersFunction (reinterpret_cast<GetNumRegionsFunc> (fnPtr));
             }
 
             if (void* fnPtr = static_cast<reaper::IReaperHostApplication*> (objPtr)->getReaperApi ("ShowConsoleMsg"))
             {
-                listener.setConsoleMsgFunction (reinterpret_cast<void (*) (const char*)> (fnPtr));
+                listener.setConsoleMsgFunction (reinterpret_cast<ConsoleMsgFunc> (fnPtr));
+            }
+
+            if (void* fnPtr = static_cast<reaper::IReaperHostApplication*> (objPtr)->getReaperApi ("EnumProjectMarkers"))
+            {
+                listener.setEnumProjectMarkersFunction (reinterpret_cast<EnumProjectMarkersFunc> (fnPtr));
             }
         }
     }
@@ -141,13 +152,15 @@ public:
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 
-    void setGlobalBypassFunction (void (*fn) (int)) override { globalBypassFn = fn; }
-    void setConsoleMsgFunction (void (*fn) (const char*)) override { consoleMsgFn = fn; }
-    void GetNumRegionsOrMarkersFunction (int (*fn) (int)) override { GetNumRegionsOrMarkersFn = fn; }
-    
-    void (*globalBypassFn) (int) = nullptr;
-    void (*consoleMsgFn) (const char*) = nullptr;
-    int (*GetNumRegionsOrMarkersFn) (int) = nullptr;
+    void setGlobalBypassFunction(GlobalBypassFunc fn) override { globalBypassFn = fn; }
+    void setConsoleMsgFunction (ConsoleMsgFunc fn) override { consoleMsgFn = fn; }
+    void setGetNumRegionsOrMarkersFunction (GetNumRegionsFunc fn) override { getNumRegionsFn = fn; }
+    void setEnumProjectMarkersFunction (EnumProjectMarkersFunc fn) override { enumProjectMarkersFn = fn; }
+
+    GlobalBypassFunc globalBypassFn = nullptr;
+    ConsoleMsgFunc consoleMsgFn = nullptr;
+    GetNumRegionsFunc getNumRegionsFn = nullptr;
+    EnumProjectMarkersFunc enumProjectMarkersFn = nullptr;
 
     VST3Extensions vst3Extensions { *this };
 };

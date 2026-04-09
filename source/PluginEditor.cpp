@@ -1,6 +1,6 @@
 #include "PluginEditor.h"
 
-PluginEditor::PluginEditor (PluginProcessor& p, void (*globalBypass) (int), void (*consoleMsg) (const char*), int (*GetNumRegionsOrMarkersFn) (int))
+PluginEditor::PluginEditor (PluginProcessor& p, GlobalBypassFunc globalBypass, ConsoleMsgFunc consoleMsg, GetNumRegionsFunc getNumRegions, EnumProjectMarkersFunc enumProjectMarkers)
     : AudioProcessorEditor (&p), processorRef (p)
 {
     juce::ignoreUnused (processorRef);
@@ -20,7 +20,7 @@ PluginEditor::PluginEditor (PluginProcessor& p, void (*globalBypass) (int), void
         inspector->setVisible (true);
     };
 
-    showconmsgButton.onClick = [consoleMsg, GetNumRegionsOrMarkersFn] { juce::NullCheckedInvocation::invoke (consoleMsg, std::to_string (GetNumRegionsOrMarkersFn(0)).c_str()); };
+    showconmsgButton.onClick = [consoleMsg, getNumRegions] { juce::NullCheckedInvocation::invoke (consoleMsg, std::to_string (getNumRegions(0)).c_str()); };
     bypassallfxButton.onClick = [globalBypass] { juce::NullCheckedInvocation::invoke (globalBypass, -1); };
 
     // Make sure that before the constructor has finished, you've set the

@@ -11,7 +11,8 @@ public:
     explicit PluginEditor (PluginProcessor&,
         void (*globalBypass) (int),
         void (*consoleMsg) (const char*),
-        int (*GetNumRegionsOrMarkersFn) (int)
+        int (*GetNumRegionsOrMarkersFn) (int),
+        int (*EnumProjectMarkersFn) (int, bool*, double*, double*, const char**, int*)
     );
     ~PluginEditor() override;
 
